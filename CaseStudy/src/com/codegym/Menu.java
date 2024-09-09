@@ -1,24 +1,30 @@
 package com.codegym;
 
-import com.codegym.bookManagement.bookListing.BookListing;
-import com.codegym.bookManagement.bookSorting.BookSorting;
-import com.codegym.entity.Book;
-import com.codegym.userManagement.LoginManager;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
+import com.codegym.bookManagement.bookListing.BookListing;
+import com.codegym.bookManagement.bookSorting.BookSorting;
+import com.codegym.entity.Book;
+import com.codegym.reviewManagement.ReviewManagement;
+import com.codegym.userManagement.LoginManager;
 
 public class Menu {
     private LoginManager loginManager;
     private List<Book> books;
+    private ReviewManagement reviewManagement;  // Added review management
     private static final String BOOK_FILE = "data/book.txt";
 
     public Menu() {
         loginManager = new LoginManager();
         books = new ArrayList<>();
+        reviewManagement = new ReviewManagement();  // Initialize review management
         loadBooksFromFile();
     }
 
@@ -80,7 +86,8 @@ public class Menu {
             System.out.println("\n3. Add Book");
             System.out.println("4. List Books");
             System.out.println("5. Sort Books");
-            System.out.println("6. Exit");
+            System.out.println("6. Manage Reviews"); // Added manage reviews option
+            System.out.println("7. Exit");
             System.out.print("Choose an option: ");
 
             try {
@@ -117,12 +124,52 @@ public class Menu {
                         break;
 
                     case 6:
+                        handleReviewMenu();  // Handle review-related options
+                        break;
+
+                    case 7:
                         System.out.println("Exiting...");
                         saveBooksToFile();
                         return;
 
                     default:
-                        System.out.println("Invalid option. Please choose 3, 4, 5, or 6.");
+                        System.out.println("Invalid option. Please choose 3, 4, 5, 7, or 6.");
+                        break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.nextLine(); // Clear the invalid input
+            }
+        }
+    }
+
+    private void handleReviewMenu() {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n1. Add Review");
+            System.out.println("2. View Reviews");
+            System.out.println("3. Back to Main Menu");
+            System.out.print("Choose an option: ");
+
+            try {
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline left-over
+
+                switch (choice) {
+                    case 1:
+                        addReview();
+                        break;
+
+                    case 2:
+                        reviewManagement.viewReviews();
+                        break;
+
+                    case 3:
+                        return;  // Go back to the main post-login menu
+
+                    default:
+                        System.out.println("Invalid option. Please choose 1, 2, or 3.");
                         break;
                 }
             } catch (InputMismatchException e) {
@@ -157,6 +204,27 @@ public class Menu {
                 return;
         }
         listBooks(); // Optionally list books after sorting
+    }
+
+    private void addReview() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter reviewer's name: ");
+        String reviewerName = scanner.nextLine();
+
+        System.out.print("Enter review text: ");
+        String reviewText = scanner.nextLine();
+
+        System.out.print("Enter rating (1 to 5): ");
+        int rating = scanner.nextInt();
+        scanner.nextLine(); // Consume newline left-over
+
+        try {
+            reviewManagement.addReview(reviewerName, reviewText, rating);
+            System.out.println("Review added successfully!");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private void loadBooksFromFile() {
